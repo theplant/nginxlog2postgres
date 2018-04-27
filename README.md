@@ -1,5 +1,7 @@
 # Import nginx log into postgres table
 
+This package use https://github.com/satyrius/gonx to parse nginx logs
+
 Install
 
 ```
