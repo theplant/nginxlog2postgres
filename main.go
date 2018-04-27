@@ -33,7 +33,7 @@ func main() {
 	}
 
 	if len(logformat) == 0 {
-		logformat = `$http_x_forwarded_for $host - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $remote_addr $request_time $upstream_response_time,`
+		logformat = `$http_x_forwarded_for $host - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $remote_addr $request_time $upstream_response_time`
 	}
 
 	logf, err := os.Open(logfile)
@@ -98,6 +98,7 @@ func main() {
 		}
 
 		rows = append(rows, []interface{}{
+			i,
 			getString(ent, i, "request", 4096),
 			statusInt,
 			body_bytes_sent_int,
@@ -135,6 +136,7 @@ func main() {
 	_, err = conn.Exec(`
 CREATE TABLE IF NOT EXISTS nginx_access_logs
 (
+	line_no                BIGINT,
 	request                VARCHAR(4096),
 	status                 BIGINT,
 	body_bytes_sent        BIGINT,
@@ -164,6 +166,7 @@ CREATE TABLE IF NOT EXISTS nginx_access_logs
 	copyCount, err := conn.CopyFrom(
 		pgx.Identifier{"nginx_access_logs"},
 		[]string{
+			"line_no",
 			"request",
 			"status",
 			"body_bytes_sent",
