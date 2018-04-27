@@ -62,46 +62,23 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		// fmt.Println(ent)
-
-		status, err := ent.Field("status")
-		if err != nil {
-			panic(err)
-		}
-
-		statusInt, err := strconv.ParseInt(status, 10, 64)
-		if err != nil {
-			panic(err)
-		}
-		body_bytes_sent, err := ent.Field("body_bytes_sent")
-		if err != nil {
-			panic(err)
-		}
-
-		body_bytes_sent_int, err := strconv.ParseInt(body_bytes_sent, 10, 64)
-		if err != nil {
-			panic(err)
-		}
 
 		var upstream_response_time float64
 		var strurt, _ = ent.Field("upstream_response_time")
-		if strurt != "-" {
+		if strurt != "-" && len(strurt) > 0 {
 			upstream_response_time, err = ent.FloatField("upstream_response_time")
 			if err != nil {
 				panic(err)
 			}
 		}
 
-		request_time, err := ent.FloatField("request_time")
-		if err != nil {
-			panic(err)
-		}
+		request_time, _ := ent.FloatField("request_time")
 
 		rows = append(rows, []interface{}{
 			i,
 			getString(ent, i, "request", 4096),
-			statusInt,
-			body_bytes_sent_int,
+			getInt(ent, i, "status"),
+			getInt(ent, i, "body_bytes_sent"),
 			getString(ent, i, "remote_addr", 255),
 			upstream_response_time,
 			getString(ent, i, "http_x_forwarded_for", 255),
@@ -190,13 +167,23 @@ CREATE TABLE IF NOT EXISTS nginx_access_logs
 	fmt.Printf("Rows %d inserted\n", copyCount)
 
 }
+func getInt(ent *gonx.Entry, line int, field string) (value int64) {
 
-func getString(ent *gonx.Entry, line int, field string, maxLength int) (value string) {
+	var strVal string
 	var err error
-	value, err = ent.Field(field)
+	strVal, _ = ent.Field(field)
+	if len(strVal) == 0 {
+		return
+	}
+	value, err = strconv.ParseInt(strVal, 10, 64)
 	if err != nil {
 		panic(err)
 	}
+	return
+}
+
+func getString(ent *gonx.Entry, line int, field string, maxLength int) (value string) {
+	value, _ = ent.Field(field)
 	checkLength(line, field, value, maxLength)
 	return
 }
